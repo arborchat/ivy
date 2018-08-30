@@ -3,19 +3,37 @@ package main
 import (
     "fmt"
     "net"
+    "encoding/json"
 )
 
-func main() {
-    fmt.Println("AYEEE LOL")
-    conn, err := net.Dial("tcp", "localhost:7777")
+const (
+    proto = "tcp"
+    serv = "localhost:7777"
+    welcome = "\n--| ~Ivy~ Version: XXX |--\n"
+)
 
-    if err != nil {
-        fmt.Println("OH NO: %s", err)
+func handleit(e error) {
+    if e != nil {
+        fmt.Println("OH NO: %s", e)
     }
+}
 
-	bs := make([]byte, 256)
+type Message struct {
+    Type int
+    Root string
+}
 
-    iread, _ := conn.Read(bs)
+func main() {
+    fmt.Println(welcome)
 
-	fmt.Printf("I read %d bytes. Here's the message:\n %s", iread, string(bs))
+	var m Message
+    conn, err := net.Dial(proto, serv)
+	handleit(err)
+
+	response := json.NewDecoder(conn)
+
+	e := response.Decode(&m)
+	handleit(e)
+
+	fmt.Printf("Type: %d\nMessage: %s\n", m.Type, m.Root)
 }
