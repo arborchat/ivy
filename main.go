@@ -18,25 +18,30 @@ func handleit(e error) {
     }
 }
 
-type WelcomeMessage struct {
-    Type   int
-    Root   string
-    Recent []string
-    Major  int
-    Minor  int
+type Message struct {
+    Type      int
+    Root      string
+    Parent    string
+    UUID      string
+    Recent    []string
+    Content   string
+    Username  string
+    Timestamp int
+    Major     int
+    Minor     int
 }
 
 func main() {
     fmt.Println(welcome)
 
-	var wm WelcomeMessage
+	var m Message
     conn, err := net.Dial(proto, serv)
 	handleit(err)
 
 	response := json.NewDecoder(conn)
 
-	e := response.Decode(&wm)
+	e := response.Decode(&m)
 	handleit(e)
 
-	fmt.Printf("Type: %d\nRoot Message: %s\nRecent Messages: %v\nServer Version %d.%d\n", wm.Type, wm.Root, wm.Recent, wm.Major, wm.Minor)
+	fmt.Printf("Type: %d\nRoot Message: %s\nRecent Messages: %v\nServer Version %d.%d\n", m.Type, m.Root, m.Recent, m.Major, m.Minor)
 }
