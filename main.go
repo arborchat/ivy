@@ -40,37 +40,39 @@ func main() {
     fmt.Println(welcome)
 
 	// Declare messages
-	var m, nm Message
+	var m Message
 
 	// Server connection
     conn, err := net.Dial(proto, serv)
 	handleit(err)
 
+
 	// JSON decoder
 	listener := json.NewDecoder(conn)
-	writer   := json.NewEncoder(conn)
 
-	// Get stuff from the server
+
+	// Get root message from the server
     fmt.Println("~~ Message from server ~~")
 	e := listener.Decode(&m)
 	handleit(e)
 	fmt.Printf("Type: %d\nRoot Message: %s\nRecent Messages: %v\nServer Version %d.%d\n", m.Type, m.Root, m.Recent, m.Major, m.Minor)
 
-	// Build message for the server
-	nm.Type      = 2 // new message
-	nm.UUID      = "111-111-111"
-	nm.Parent    = m.Root
-	nm.Content   = "Hello world!"
-	nm.Timestamp = 1
-	nm.Username  = "josh"
+	// Create channel
+	rcvChan := make(chan Message)
 
-	// Send stuff to the server
-	we := writer.Encode(&nm)
-	handleit(we)
+	go func() {
+        // Get stuff from the server and send to channel
+        for {
+        	le := listener.Decode(&m)
+        	handleit(le)
+        	rcvChan <- m
+        }
+	}()
 
-    // Get stuff from the server
-    fmt.Println("~~ Message from server ~~")
-	le := listener.Decode(&m)
-	handleit(le)
-	fmt.Printf("Type: %d\nParent: %s\nContent: %s\n", m.Type, m.Parent, m.Content)
+	// Print stuff from the server sent through the channel
+	for {
+    	incMessage := <-rcvChan
+        fmt.Println("~~ Message from server ~~")
+    	fmt.Printf("Type: %d\nParent: %s\nContent: %s\n", incMessage.Type, incMessage.Parent, incMessage.Content)
+	}
 }
